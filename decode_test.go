@@ -60,7 +60,14 @@ func TestJSONV2Decoder(t *testing.T) {
 }
 
 func BenchmarkJSONV2Decoder(b *testing.B) {
+	r := bytes.NewReader(eventData)
+	d := jsontext.NewDecoder(r)
 	b.ReportAllocs()
 	for b.Loop() {
+		r.Reset(eventData)
+		d.Reset(r)
+		if err := json.UnmarshalDecode(d, (&Event{})); err != nil {
+			b.Fatal(err)
+		}
 	}
 }

@@ -181,9 +181,14 @@ func jxDecodeMap(d *jx.Decoder, dst *map[string]any, prefix string) error {
 		// case jx.Invalid:
 		// case jx.Null:
 		case jx.Number:
-			v, err = d.Int()
-			if err != nil {
-				v, err = d.Float64()
+			var f float64
+			f, err = d.Float64()
+			if err == nil {
+				if float64(int64(f)) == f {
+					v = int(f)
+				} else {
+					v = f
+				}
 			}
 		case jx.Object:
 			err = jxDecodeMap(d, dst, fmt.Sprintf("%s%s.", prefix, key))
