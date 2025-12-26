@@ -54,6 +54,53 @@ func (e *Event) Decode(d *jx.Decoder) error {
 	})
 }
 
+// NOTE: Boring copy of [Event.Decode]
+func (e *EventGenerics) Decode(d *jx.Decoder) error {
+	return d.ObjBytes(func(d *jx.Decoder, key []byte) (err error) {
+		switch string(key) {
+		case "sdk":
+			err = e.SDK.Decode(d)
+		case "platform":
+			e.Platform, err = d.Str()
+		case "server_name":
+			e.ServerName, err = d.Str()
+		case "environment":
+			e.Environment, err = d.Str()
+		case "release":
+			e.Release, err = d.Str()
+		case "level":
+			e.Level, err = d.Str()
+		case "event_id":
+			e.EventID, err = d.Str()
+		case "message":
+			e.Message, err = d.Str()
+		case "contexts":
+			err = jxDecodeMap(d, &e.Contexts, "")
+		case "extra":
+			err = jxDecodeMap(d, &e.Extra, "")
+		case "user":
+			err = jxDecodeMap(d, &e.User, "")
+		case "tags":
+			err = jxDecodeStrMap(d, &e.Tags)
+		case "exception":
+			err = e.Exception.Decode(d)
+		case "timestamp":
+			var s string
+			s, err = d.Str()
+			if err != nil {
+				break
+			}
+			e.Timestamp, err = time.Parse(time.RFC3339Nano, s)
+		default:
+			err = d.Skip()
+		}
+		if err != nil {
+			err = errors.Wrap(err, string(key))
+		}
+		return err
+	})
+}
+
 func (s *SDK) Decode(d *jx.Decoder) error {
 	return d.ObjBytes(func(d *jx.Decoder, key []byte) (err error) {
 		switch string(key) {
@@ -75,7 +122,6 @@ type Decoder interface {
 	Decode(*jx.Decoder) error
 }
 
-// TODO: Use generic instead of concrete Exceptions and Frames.
 type Array[T any, PT interface {
 	*T
 	Decoder
@@ -105,6 +151,28 @@ func (f *Exceptions) Decode(d *jx.Decoder) error {
 }
 
 func (e *Exception) Decode(d *jx.Decoder) error {
+	return d.ObjBytes(func(d *jx.Decoder, key []byte) (err error) {
+		switch string(key) {
+		case "module":
+			e.Module, err = d.Str()
+		case "type":
+			e.Type, err = d.Str()
+		case "value":
+			e.Value, err = d.Str()
+		case "frames":
+			err = e.Frames.Decode(d)
+		default:
+			err = d.Skip()
+		}
+		if err != nil {
+			err = errors.Wrap(err, string(key))
+		}
+		return err
+	})
+}
+
+// NOTE: Boring copy of [Exception.Decode]
+func (e *ExceptionGenerics) Decode(d *jx.Decoder) error {
 	return d.ObjBytes(func(d *jx.Decoder, key []byte) (err error) {
 		switch string(key) {
 		case "module":

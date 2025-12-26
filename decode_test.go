@@ -31,26 +31,49 @@ func init() {
 
 func TestJXDecoder(t *testing.T) {
 	d := jx.GetDecoder()
-	d.ResetBytes(eventData)
 	e := new(Event)
+
+	d.ResetBytes(eventData)
 	if err := e.Decode(d); err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("jx decoded event: %+v", *e)
+
+	d.ResetBytes(eventData)
+	t.Run("generics", func(t *testing.T) {
+		e := new(EventGenerics)
+		if err := e.Decode(d); err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("jx decoded event: %+v", *e)
+	})
 }
 
 func BenchmarkJXDecoder(b *testing.B) {
 	d := jx.GetDecoder()
-	b.ReportAllocs()
-	for b.Loop() {
-		d.ResetBytes(eventData)
-		if err := (&Event{}).Decode(d); err != nil {
-			b.Fatal(err)
+
+	b.Run("concrete", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			d.ResetBytes(eventData)
+			if err := (&Event{}).Decode(d); err != nil {
+				b.Fatal(err)
+			}
 		}
-	}
+	})
+
+	b.Run("generics", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			d.ResetBytes(eventData)
+			if err := (&EventGenerics{}).Decode(d); err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
 }
 
-func TestJSONV2Decoder(t *testing.T) {
+func TestJSONv2Decoder(t *testing.T) {
 	d := jsontext.NewDecoder(bytes.NewReader(eventData))
 	e := new(Event)
 	if err := json.UnmarshalDecode(d, e); err != nil {
@@ -59,7 +82,7 @@ func TestJSONV2Decoder(t *testing.T) {
 	t.Logf("jsonv2 decoded event: %+v", *e)
 }
 
-func BenchmarkJSONV2Decoder(b *testing.B) {
+func BenchmarkJSONv2Decoder(b *testing.B) {
 	r := bytes.NewReader(eventData)
 	d := jsontext.NewDecoder(r)
 	b.ReportAllocs()

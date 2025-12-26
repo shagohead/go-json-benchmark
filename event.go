@@ -19,6 +19,23 @@ type Event struct {
 	Timestamp   time.Time
 }
 
+type EventGenerics struct {
+	SDK         SDK
+	Platform    string
+	ServerName  string
+	Environment string
+	Release     string
+	Level       string
+	Contexts    map[string]any
+	Extra       map[string]any
+	User        map[string]any
+	Tags        map[string]string
+	EventID     string
+	Message     string
+	Exception   Array[ExceptionGenerics, *ExceptionGenerics]
+	Timestamp   time.Time
+}
+
 type SDK struct {
 	Name    string
 	Version string
@@ -31,6 +48,13 @@ type Exception struct {
 	Type   string
 	Value  string
 	Frames Frames
+}
+
+type ExceptionGenerics struct {
+	Module string
+	Type   string
+	Value  string
+	Frames Array[Frame, *Frame]
 }
 
 type Frames []Frame
